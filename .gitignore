@@ -1,41 +1,48 @@
 # ============================================================
-# .gitignore — Git 忽略文件配置
+# .gitignore — Git 忽略规则
 # ------------------------------------------------------------
-# 这里列出的文件/文件夹不会被 git 跟踪和提交。
-# 保护令牌、节省空间、避免提交构建产物。
+# 告诉 git 哪些文件不要纳入版本控制。
+# 这些通常是：依赖（可重新安装）、构建产物（可重新生成）、
+# 敏感信息（凭据/令牌）、IDE 配置、系统垃圾文件。
 # ============================================================
 
-# ---------- 依赖目录（体积巨大，不应提交）----------
+# ---------- 依赖目录（最重要的忽略项！）----------
+# node_modules 可能几百 MB，绝不能提交。
+# 任何人 clone 仓库后运行 `npm install` 就会重新生成。
 node_modules/
-.pnp
+*.pnp
 .pnp.js
 
-# ---------- 构建产物（可重新生成）----------
+# ---------- 构建产物 ----------
 dist/
-dist-electron/
+dist-ssr/
 build/
-out/
+*.local
 
-# ---------- 包管理器日志 ----------
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-package-lock.json.bak
-
-# ---------- 敏感信息（绝对不能提交！）----------
-# 任何包含 token / 密钥 / 凭据的文件
+# ---------- 敏感信息（凭据/令牌）----------
+# 任何包含令牌、密码、密钥的文件都不能进仓库！
 .env
 .env.local
 .env.*.local
 *.secret
 *.key
 *.pem
+# MCP 配置文件可能含令牌，不提交
+.mcp.json
 **/.mcp.json
-.workbuddy/
 
-# ---------- 编辑器/IDE 配置 ----------
-.vscode/
+# ---------- 日志 ----------
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ---------- 编辑器 / IDE ----------
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
 .idea/
 *.swp
 *.swo
@@ -44,20 +51,15 @@ package-lock.json.bak
 Thumbs.db
 desktop.ini
 
-# ---------- 操作系统文件 ----------
-*.tmp
-*.temp
-*.log
-
-# ---------- Electron 打包输出 ----------
+# ---------- Electron 打包产物 ----------
+out/
 release/
 *.exe
 *.dmg
 *.AppImage
 *.snap
 
-# ---------- 缓存 ----------
-.cache/
-.parcel-cache/
-.vite/
-.eslintcache
+# ---------- 操作系统垃圾文件 ----------
+*.tmp
+*.bak
+*.cache
