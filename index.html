@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <!-- 禁用用户缩放，避免滚轮改变页面大小 -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>世界之心 — Heart of the World</title>
+  <style>
+    /* ============================================================
+       全局样式：清空默认外边距、设置全屏黑色背景、禁止滚动条
+       ============================================================ */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 100%; height: 100%; overflow: hidden;
+      background: #000;
+      font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
+      user-select: none;       /* 禁止选中文字 */
+      cursor: default;
+    }
+    /* 游戏画布容器 */
+    #app { width: 100vw; height: 100vh; }
+    canvas { display: block; }
+
+    /* ============================================================
+       开始遮罩层：游戏加载完成前显示的标题画面
+       ============================================================ */
+    #start-screen {
+      position: fixed; inset: 0; z-index: 100;
+      background: radial-gradient(ellipse at center, #2c5f8a 0%, #0a1929 70%, #000 100%);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      color: #fff; text-align: center;
+    }
+    #start-screen h1 {
+      font-size: 72px; letter-spacing: 8px;
+      text-shadow: 0 0 30px #4a9, 0 0 60px #4a9;
+      margin-bottom: 12px;
+      background: linear-gradient(180deg, #fff 0%, #7dd 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    #start-screen .subtitle {
+      font-size: 20px; color: #9cf; margin-bottom: 60px;
+      letter-spacing: 4px; opacity: 0.85;
+    }
+    #start-btn {
+      padding: 18px 64px; font-size: 24px; cursor: pointer;
+      background: linear-gradient(180deg, #5a8 0%, #386 100%);
+      color: #fff; border: 3px solid #7dd; border-radius: 6px;
+      letter-spacing: 6px; font-family: inherit;
+      box-shadow: 0 0 30px rgba(80,200,180,0.5);
+      transition: all 0.2s;
+    }
+    #start-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 50px rgba(80,200,180,0.8);
+    }
+    #loading-text {
+      position: absolute; bottom: 40px; color: #579; font-size: 14px;
+      letter-spacing: 2px;
+    }
+    .controls-hint {
+      position: absolute; bottom: 100px; color: #ace; font-size: 14px;
+      line-height: 2; opacity: 0.7;
+    }
+    .controls-hint b { color: #ff8; }
+  </style>
+</head>
+<body>
+  <!-- 游戏画布将挂载到这里 -->
+  <div id="app"></div>
+
+  <!-- 开始画面 -->
+  <div id="start-screen">
+    <h1>世界之心</h1>
+    <div class="subtitle">— 寻 找 世 界 之 心 —</div>
+    <button id="start-btn">进 入 世 界</button>
+    <div class="controls-hint">
+      <b>WASD</b> 移动 &nbsp; <b>鼠标</b> 视角 &nbsp; <b>空格</b> 跳跃 &nbsp; <b>Shift</b> 下蹲<br>
+      <b>左键</b> 破坏方块 &nbsp; <b>右键</b> 放置方块 &nbsp; <b>1-9</b> 切换物品 &nbsp; <b>E</b> 对话
+    </div>
+    <div id="loading-text">正在加载世界…</div>
+  </div>
+
+  <!-- ============================================================
+       file:// 协议保护检测
+       ------------------------------------------------------------
+       浏览器安全策略禁止 ES Module 在 file:// 协议下加载。
+       如果用户直接双击 index.html 打开（地址栏是 file:///），
+       会黑屏无反应。这里检测到后显示明确的启动指引。
+       ============================================================ -->
+  <div id="file-error" style="display:none; position:fixed; inset:0; z-index:200; background:#1a0a0a; color:#fff; padding:40px; font-family:'Microsoft YaHei',sans-serif;">
+    <div style="max-width:680px; margin:40px auto; background:rgba(255,80,80,0.1); border:2px solid #f55; border-radius:10px; padding:36px;">
+      <h1 style="color:#f88; margin-top:0; font-size:28px;">⚠ 不能直接双击打开游戏</h1>
+      <p style="font-size:16px; line-height:1.8; color:#fcc; margin:20px 0;">
+        你现在是用 <b>双击 index.html</b> 的方式打开的（地址栏显示 <code style="background:#000;padding:2px 6px;border-radius:3px;">file:///...</code>）。<br>
+        由于浏览器的安全限制，这种方式无法加载游戏。
+      </p>
+      <p style="font-size:16px; line-height:1.8; color:#fff; margin:24px 0;">
+        <b style="color:#9f9;">正确的启动方法：</b><br>
+        ① 打开游戏所在的文件夹<br>
+        ② <b style="color:#ff9;">双击「运行游戏.bat」</b><br>
+        ③ 等几秒，浏览器会自动打开游戏
+      </p>
+      <p style="font-size:14px; color:#aaa; margin-top:24px;">
+        或者用命令行：<code style="background:#000;padding:4px 8px;border-radius:3px;color:#9f9;">npm run dev</code>
+      </p>
+    </div>
+  </div>
+  <script>
+    // 普通 script（非 module）总能执行，用来做协议检测
+    if (location.protocol === 'file:') {
+      document.getElementById('start-screen').style.display = 'none';
+      document.getElementById('file-error').style.display = 'block';
+    }
+  </script>
+
+  <!-- 游戏脚本入口（ES 模块，仅在 http:// 协议下加载） -->
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
